@@ -1,0 +1,438 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Intergalactic Sorry — Transmission</title>
+<style>
+  :root{
+    --bg:#05060b; --neon:#7effc7; --accent:#5ef; --alien:#7fff7f;
+    --glass: rgba(255,255,255,0.03);
+    --font-sans: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0;font-family:var(--font-sans);background:
+    radial-gradient(ellipse at 20% 10%, rgba(95,120,255,0.03), transparent 10%),
+    linear-gradient(180deg,#02030a 0%, #05060b 60%);
+    color:#e6f6ff;-webkit-font-smoothing:antialiased}
+  .stage{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:18px}
+
+  /* Card */
+  .card{width:100%;max-width:980px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:18px;padding:18px;box-shadow:0 8px 40px rgba(0,0,0,0.6);position:relative;overflow:hidden;transition:transform .45s ease}
+  .card:active{transform:translateY(2px)}
+  /* starfield */
+  .starfield{position:absolute;inset:0;pointer-events:none;opacity:0.45;background-image:
+    radial-gradient(circle, rgba(255,255,255,0.06) 1px, transparent 1px),
+    radial-gradient(circle, rgba(255,255,255,0.03) 1px, transparent 1px);
+    background-size: 3px 3px, 6px 6px;transform:translateZ(0)}
+  header{display:flex;align-items:center;gap:14px}
+  .ufo{width:76px;height:76px;position:relative;flex-shrink:0}
+  .ufo .saucer{width:100%;height:38px;background:linear-gradient(90deg,#9ad,#6bf);border-radius:36px 36px 20px 20px;box-shadow:0 6px 18px rgba(90,140,255,0.08) inset}
+  .ufo .dome{position:absolute;left:50%;transform:translateX(-50%);top:-8px;width:44px;height:44px;border-radius:50%;background:linear-gradient(180deg,#bdf,#79c);box-shadow:0 8px 18px rgba(0,0,0,0.25)}
+  h1{font-size:22px;margin:0;font-weight:800;letter-spacing:.4px}
+  p.lead{color:rgba(230,246,255,0.85);margin:6px 0 12px;font-size:13px}
+
+  /* layout */
+  .console{display:grid;grid-template-columns:1fr 340px;gap:18px;margin-top:12px}
+  @media (max-width:820px){.console{grid-template-columns:1fr} .ufo{width:56px;height:56px}}
+  .panel{background:linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.008));border-radius:12px;padding:16px;min-height:220px}
+  .log{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, 'Courier New', monospace;background:rgba(0,0,0,0.12);padding:12px;border-radius:8px;min-height:180px;color:var(--neon);line-height:1.5;white-space:pre-wrap;transition:all .35s ease}
+  .controls{display:flex;flex-direction:column;gap:12px}
+  .btn{display:inline-flex;align-items:center;gap:10px;padding:14px 16px;border-radius:12px;background:linear-gradient(90deg,var(--accent),#6af);border:none;color:#051;cursor:pointer;font-weight:700;box-shadow:0 10px 30px rgba(90,150,255,0.06)}
+  .btn.big{font-size:18px;padding:18px 20px;border-radius:14px}
+  .btn.secondary{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--neon);font-weight:600}
+  .row{display:flex;gap:8px;align-items:center}
+  .small{font-size:13px;color:rgba(230,246,255,0.8)}
+  .ufo-beam{position:absolute;left:50%;transform:translateX(-50%);top:84px;width:160px;height:0;background:linear-gradient(180deg, rgba(130,255,170,0.12), rgba(0,0,0,0));pointer-events:none;border-radius:50%;transition:all .28s ease}
+
+  .alien{display:flex;align-items:center;gap:12px}
+  .alien .avatar{width:80px;height:80px;border-radius:14px;background:linear-gradient(180deg,#0cf,#06a);display:flex;align-items:center;justify-content:center;font-size:40px;box-shadow:0 8px 30px rgba(0,200,160,0.06) inset}
+
+  .meter{height:12px;background:rgba(255,255,255,0.04);border-radius:8px;overflow:hidden}
+  .meter > i{display:block;height:100%;background:linear-gradient(90deg,var(--alien),#7ef);width:0%;transition:width 900ms cubic-bezier(.2,.9,.2,1)}
+
+  footer{margin-top:14px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
+  .muted{opacity:.75;font-size:13px}
+  /* page text area */
+  .centerStage{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:18px}
+  .titleBig{font-size:28px;font-weight:800;letter-spacing:.6px; text-align:center}
+  .subText{color:rgba(230,246,255,0.9);font-size:16px;text-align:center;max-width:860px}
+
+  /* toaster / status */
+  .status{position:fixed;right:18px;bottom:18px;background:#02111a;color:#bff;padding:10px 12px;border-radius:12px;box-shadow:0 6px 20px rgba(0,0,0,0.6);font-size:13px}
+
+  /* responsive tweaks */
+  @media (max-width:520px){
+    .titleBig{font-size:20px}
+    .subText{font-size:14px}
+    .alien .avatar{width:64px;height:64px;font-size:32px}
+    .log{min-height:140px}
+  }
+</style>
+</head>
+<body>
+  <div class="stage">
+    <div class="card" role="application" aria-label="Intergalactic apology transmission">
+      <div class="starfield" aria-hidden></div>
+
+      <header>
+        <div class="ufo" aria-hidden>
+          <div class="saucer"></div>
+          <div class="dome">👽</div>
+        </div>
+        <div>
+          <h1 class="glitch" data-text="TRANSMISSION OVERRIDE...">TRANSMISSION OVERRIDE...</h1>
+          <p class="lead">The Intergalactic Forgiveness Council has taken control of this page to deliver an apology—alien style.</p>
+        </div>
+      </header>
+
+      <div class="console" style="margin-top:14px">
+        <div class="panel centerStage" id="mainPanel" aria-live="polite">
+          <div class="titleBig" id="pageTitle">TRANSMISSION OVERRIDE… 👽</div>
+          <div class="subText" id="pageText">We are initiating an interstellar apology transmission. Press Start to open the channel.</div>
+
+          <div style="margin-top:12px">
+            <button class="btn big" id="startBtn">▶ START TRANSMISSION</button>
+          </div>
+        </div>
+
+        <aside class="panel controls" aria-label="controls">
+          <div class="alien">
+            <div class="avatar" aria-hidden>👾</div>
+            <div>
+              <div class="small">Alien voice & ambience</div>
+              <div class="row" style="margin-top:8px">
+                <!-- start button mirrored for convenience -->
+                <button class="btn secondary" id="startBtnSmall">▶ Start</button>
+                <button class="btn secondary" id="toggleSfx">Toggle SFX</button>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <label class="small">Guilt scanner</label>
+            <div class="meter" style="margin-top:8px"><i id="guiltBar"></i></div>
+          </div>
+
+          <div>
+            <label class="small">Ambient volume</label>
+            <input type="range" id="volRange" min="0" max="1" step="0.01" value="0.45">
+          </div>
+
+          <!-- removed pitch & replay controls for simplicity/professionalism -->
+
+          <div class="row" style="margin-top:8px;justify-content:flex-start;">
+            <button class="btn secondary" id="downloadBtn">Download (placeholder)</button>
+          </div>
+
+          <small class="muted" style="display:block;margin-top:10px">Note: Tap the large Start button to enable audio (browser policy).</small>
+        </aside>
+      </div>
+
+      <footer>
+        <div class="small">Made with cosmic remorse ❤️👽</div>
+        <div class="small">Use keyboard <kbd>Space</kbd> to start/stop after starting</div>
+      </footer>
+
+      <div class="ufo-beam" id="beam" aria-hidden></div>
+    </div>
+  </div>
+
+  <div class="status" id="status" aria-hidden>Ready</div>
+
+<script>
+/* ---------- starfield is already CSS based; add a few twinkling stars for depth ---------- */
+(function addStars(){
+  const s = document.querySelector('.starfield');
+  // add few larger twinkle dots
+  for(let i=0;i<35;i++){
+    const d = document.createElement('div');
+    d.style.position='absolute';
+    d.style.left = Math.random()*100 + '%';
+    d.style.top = Math.random()*100 + '%';
+    const size = (Math.random()*2)+0.7;
+    d.style.width = size+'px'; d.style.height = size+'px';
+    d.style.borderRadius = '50%';
+    d.style.background = 'rgba(255,255,255,'+(0.15+Math.random()*0.25)+')';
+    d.style.filter = 'blur('+(Math.random()*1.2)+'px)';
+    s.appendChild(d);
+  }
+})();
+
+/* ---------- Elements ---------- */
+const startBtn = document.getElementById('startBtn');
+const startBtnSmall = document.getElementById('startBtnSmall');
+const toggleSfx = document.getElementById('toggleSfx');
+const downloadBtn = document.getElementById('downloadBtn');
+const volRange = document.getElementById('volRange');
+const guiltBar = document.getElementById('guiltBar');
+const pageTitle = document.getElementById('pageTitle');
+const pageText = document.getElementById('pageText');
+const beam = document.getElementById('beam');
+const status = document.getElementById('status');
+
+let audioCtx, masterGain, humOsc, humOsc2, humGain, lfo, sfxGain;
+let sfxOn = true;
+let started = false;
+let pages = 0; // we will count lines as pages
+let currentLine = 0;
+
+/* ---------- lines (kept concise) ---------- */
+const lines = [
+  { title: 'TRANSMISSION ACTIVATED', text: 'Attention preety lady. This is the Intergalactic Forgiveness Council. We are the aleins from mars' },
+  { title: 'DISTURBANCE DETECTED', text: 'We have detected a minor disturbance in the emotional field by this boy. he had played with your emotions ' },
+  { title: 'SUBJECT ANALYSIS', text: 'He has committed a small mistake. he is very guilty for his behaviour.  ' },
+  { title: 'REQUEST', text: 'We officially request you to forgive him. Forgive Anurag, or we shall take him with us to another galaxy. ' },
+  { title: 'END OF TRANSMISSION', text: 'End of transmission. The universe thanks you. on behalf of whole universe,we are very sorry to you. sorry beautiful. ' }
+];
+pages = lines.length;
+
+/* ---------- initialize WebAudio on first user gesture ---------- */
+function initAudio() {
+  if (audioCtx) return;
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  masterGain = audioCtx.createGain(); masterGain.gain.value = parseFloat(volRange.value); masterGain.connect(audioCtx.destination);
+
+  // hum: two low sines for depth
+  humOsc = audioCtx.createOscillator(); humOsc.type='sine'; humOsc.frequency.value = 48;
+  humOsc2 = audioCtx.createOscillator(); humOsc2.type='sine'; humOsc2.frequency.value = 96;
+  humGain = audioCtx.createGain(); humGain.gain.value = 0.06;
+  humOsc.connect(humGain); humOsc2.connect(humGain);
+
+  // subtle filter wobble
+  const filter = audioCtx.createBiquadFilter(); filter.type='lowpass'; filter.frequency.value = 900;
+  lfo = audioCtx.createOscillator(); lfo.type='sine'; lfo.frequency.value = 0.25;
+  const lfoGain = audioCtx.createGain(); lfoGain.gain.value = 60;
+  lfo.connect(lfoGain); lfoGain.connect(filter.frequency);
+
+  humGain.connect(filter);
+  filter.connect(masterGain);
+
+  humOsc.start(); humOsc2.start(); lfo.start();
+
+  sfxGain = audioCtx.createGain(); sfxGain.gain.value = 0.9; sfxGain.connect(masterGain);
+}
+
+/* volume control */
+volRange.addEventListener('input', ()=>{ if(masterGain) masterGain.gain.value = volRange.value; });
+
+/* toggle SFX */
+toggleSfx.addEventListener('click', ()=>{ sfxOn = !sfxOn; toggleSfx.textContent = sfxOn ? 'Toggle SFX' : 'SFX Off'; statusFlash(sfxOn ? 'SFX on' : 'SFX off'); });
+
+/* Start-button handlers (both large + small) */
+[startBtn, startBtnSmall].forEach(btn=>{
+  btn.addEventListener('click', async ()=>{
+    if(!started){
+      initAudio();
+      // resume in case suspended
+      if(audioCtx && audioCtx.state === 'suspended') await audioCtx.resume();
+      started = true;
+      startBtn.textContent = '…Transmitting';
+      startBtn.classList.add('btn--active');
+      startBtnSmall.disabled = true;
+      statusFlash('Channel open — transmitting');
+      playNextLine(); // begin speaking lines sequentially
+    }
+  });
+});
+
+/* keyboard space to start if not started */
+document.addEventListener('keydown', (e)=>{ if(e.code === 'Space'){ e.preventDefault(); if(!started) startBtn.click(); } });
+
+/* status messages small helper */
+function statusFlash(msg){
+  status.textContent = msg;
+  status.style.opacity = '1';
+  clearTimeout(status._t);
+  status._t = setTimeout(()=>{ status.style.opacity = '0.85'; }, 1800);
+}
+
+/* ---------- speech handling (no duplicate utterances) ---------- */
+function speakText(text, opts = {}) {
+  return new Promise((resolve) => {
+    if(!('speechSynthesis' in window)){
+      // fallback small beep with WebAudio
+      doSfxBeep();
+      resolve();
+      return;
+    }
+
+    // cancel any previous queued utterances to avoid overlap
+    speechSynthesis.cancel();
+
+    const u = new SpeechSynthesisUtterance(text);
+    // select a reasonable voice (prefer english)
+    const voices = speechSynthesis.getVoices();
+    if(voices && voices.length){
+      const preferred = voices.find(v => /Google|Microsoft|en-?US|en-?GB|FEMALE|Male/i.test(v.name));
+      if(preferred) u.voice = preferred;
+    }
+    // make it slightly fast and slightly lower pitch for "alien" clarity
+    u.rate = opts.rate || 1.45;   // faster reading
+    u.pitch = opts.pitch || 0.75; // slightly lower
+    u.volume = 1.0;
+
+    u.onstart = ()=>{
+      appendLog('[ALIEN] ' + text);
+      pulseBeam();
+    };
+    u.onend = ()=>{ resolve(); };
+    u.onerror = ()=>{ resolve(); };
+
+    // speak
+    try{
+      speechSynthesis.speak(u);
+    }catch(e){
+      // in case speak fails
+      console.warn('Speech failed:', e);
+      resolve();
+    }
+  });
+}
+
+/* ---------- sequential player for lines ---------- */
+let playing = false;
+async function playNextLine(){
+  if(playing) return;
+  playing = true;
+  while(currentLine < pages){
+    const idx = currentLine;
+    // update UI
+    pageTitle.textContent = lines[idx].title;
+    pageText.textContent = lines[idx].text;
+    // animate guilt meter only on page 2/3
+    if(idx === 2){
+      animateGuilt();
+    }
+    // play a small page-specific sfx, then speak
+    await playPageSfx(idx+1);
+    await speakText(lines[idx].text);
+    // brief pause between lines
+    await delay(420);
+    currentLine++;
+  }
+  // finished
+  playing = false;
+  finalSequence();
+}
+
+/* small delay helper */
+function delay(ms){ return new Promise(r=>setTimeout(r, ms)); }
+
+/* ---------- play small SFX per page, using WebAudio for crispness ---------- */
+async function playPageSfx(pageNum){
+  if(!audioCtx || !sfxOn) return;
+  // different tiny stingers by page
+  const now = audioCtx.currentTime;
+  switch(pageNum){
+    case 1: // activation blip
+      playOsc(600, 0.06, 0.02);
+      break;
+    case 2: // detected ping
+      playOsc(420, 0.04, 0.03);
+      playOsc(720, 0.02, 0.05, 0.02);
+      break;
+    case 3: // scanner noise - short broadband noise
+      await playNoiseSweep(0.35);
+      break;
+    case 4:
+      playOsc(200, 0.03, 0.06);
+      break;
+    case 5:
+      playOsc(440, 0.08, 0.08);
+      break;
+  }
+}
+
+/* helper: play simple oscillator blip */
+function playOsc(freq, gainVal=0.03, dur=0.06, delay=0){
+  if(!audioCtx) return;
+  const o = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  o.type='sine'; o.frequency.value = freq;
+  g.gain.value = 0;
+  o.connect(g); g.connect(sfxGain);
+  const t = audioCtx.currentTime + delay;
+  g.gain.setValueAtTime(0, t);
+  g.gain.linearRampToValueAtTime(gainVal, t + 0.002);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  o.start(t); o.stop(t + dur + 0.02);
+}
+
+/* helper: short noise sweep for scanner */
+function playNoiseSweep(duration = 0.3){
+  return new Promise(resolve=>{
+    if(!audioCtx) { resolve(); return; }
+    const bufferSize = audioCtx.sampleRate * duration;
+    const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / bufferSize);
+    const src = audioCtx.createBufferSource(); src.buffer = buffer;
+    const g = audioCtx.createGain(); g.gain.value = 0.12;
+    src.connect(g); g.connect(sfxGain);
+    src.start();
+    setTimeout(()=>{ try{ src.stop(); }catch(e){}; resolve(); }, duration*1000);
+  });
+}
+
+/* small beep fallback when SpeechSynthesis not available */
+function doSfxBeep(){ if(audioCtx) playOsc(560,0.06,0.08); }
+
+/* ---------- visual effects ---------- */
+function pulseBeam(){
+  beam.style.width = '220px';
+  beam.style.height = '220px';
+  beam.style.opacity = '0.36';
+  setTimeout(()=>{ beam.style.height='0px'; beam.style.opacity='0'; }, 420);
+}
+function animateGuilt(){
+  guiltBar.style.width = '0%';
+  let val = 0;
+  const id = setInterval(()=>{ val += Math.random()*14; if(val>99) val=99; guiltBar.style.width = val + '%'; if(val>=99){ clearInterval(id); guiltBar.style.width='99%'; } }, 220);
+}
+
+/* ---------- final sequence ---------- */
+function finalSequence(){
+  pageTitle.textContent = 'TRANSMISSION COMPLETE';
+  pageText.textContent = 'On behalf of the entire universe — Anurag is truly, deeply... Sorry ❤️👽';
+  // small heart trail
+  const trail = document.createElement('div');
+  trail.textContent = '💚';
+  trail.style.position='absolute'; trail.style.left='50%'; trail.style.top='20%';
+  trail.style.transform='translateX(-50%)'; trail.style.fontSize='60px'; trail.style.opacity='0';
+  document.querySelector('.card').appendChild(trail);
+  setTimeout(()=>{ trail.style.transition='all 1200ms cubic-bezier(.2,.9,.2,1)'; trail.style.opacity='1'; trail.style.transform='translate(-50%,120px) scale(2)'; }, 40);
+  setTimeout(()=>{ trail.style.opacity='0'; try{ trail.remove(); }catch(e){} }, 1800);
+  statusFlash('Transmission complete');
+  startBtn.textContent = '✔ Transmission Sent';
+}
+
+/* ---------- logging helper ---------- */
+const log = document.querySelector('.log');
+function appendLog(txt){
+  if(!log) return;
+  log.textContent += (log.textContent? '\n' : '') + txt;
+  log.scrollTop = log.scrollHeight;
+}
+
+/* ---------- placeholder download button ---------- */
+downloadBtn.addEventListener('click', ()=>{ statusFlash('Export placeholder — use screen recorder to capture.'); });
+
+/* ---------- accessibility: clicking main panel after start advances one line ---------- */
+document.getElementById('mainPanel').addEventListener('click', ()=>{
+  if(started && !playing) { /* if not playing, start next line if any */ if(currentLine < pages){ playNextLine(); } }
+});
+
+/* ---------- preload voices (Chrome issue) ---------- */
+if('speechSynthesis' in window){
+  window.speechSynthesis.onvoiceschanged = function(){ /* noop to ensure voices loaded early */ };
+}
+
+/* ---------- keyboard shortcuts ---------- */
+document.addEventListener('keydown',(e)=>{
+  if(e.code==='Space'){ e.preventDefault(); if(!started) startBtn.click(); else { /* allow replay/stop? we'll cancel */ if(speechSynthesis) speechSynthesis.cancel(); statusFlash('Speech stopped'); } }
+});
+
+</script>
+</body>
+</html>
